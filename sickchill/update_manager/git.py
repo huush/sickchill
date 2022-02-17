@@ -3,6 +3,7 @@ import re
 import subprocess
 
 from sickchill import logger, settings
+from sickchill.init_helpers import poetry_install
 from sickchill.oldbeard import helpers, notifiers
 
 from .abstract import UpdateManagerBase
@@ -305,6 +306,7 @@ class GitUpdateManager(UpdateManagerBase):
             stdout_, stderr_, exit_status = self._run_git(self._git_path, "checkout -f " + self.branch)
 
         if exit_status == 0:
+            poetry_install()
             self._find_installed_version()
 
             # Notify update successful

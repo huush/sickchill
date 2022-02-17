@@ -8,6 +8,7 @@ from sickchill import logger, settings
 from sickchill.oldbeard import helpers, notifiers
 
 from .abstract import UpdateManagerBase
+from sickchill.init_helpers import poetry_install
 
 
 class SourceUpdateManager(UpdateManagerBase):
@@ -200,6 +201,8 @@ class SourceUpdateManager(UpdateManagerBase):
             logger.exception(f"Error while trying to update: {error}")
             logger.debug(f"Traceback: {traceback.format_exc()}")
             return False
+
+        poetry_install()
 
         # Notify update successful
         notifiers.notify_git_update(settings.CUR_COMMIT_HASH or "")
