@@ -58,6 +58,7 @@ class DBConnection(object):
             # in all the public methods after the lock has been
             # acquired
             with db_locks[self.filename]:
+                self.connection.execute("PRAGMA foreign_keys = on")
                 self._set_row_factory()
 
         except OperationalError:

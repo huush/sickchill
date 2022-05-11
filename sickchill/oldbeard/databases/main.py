@@ -234,6 +234,7 @@ class InitialSchema(db.SchemaUpgrade):
                 "CREATE TABLE whitelist (show_id INTEGER, range TEXT, keyword TEXT);",
                 "CREATE TABLE xem_refresh (indexer TEXT, indexer_id INTEGER PRIMARY KEY, last_refreshed INTEGER);",
                 "CREATE TABLE indexer_mapping (indexer_id INTEGER, indexer NUMERIC, mindexer_id INTEGER, mindexer NUMERIC, PRIMARY KEY (indexer_id, indexer));",
+                "CREATE TABLE season_release_names (id PRIMARY KEY, name TEXT, episode TEXT, FOREIGN KEY (episode) REFERENCES tv_episodes(episode_id))",
                 "CREATE UNIQUE INDEX idx_indexer_id ON tv_shows(indexer_id);",
                 "CREATE INDEX idx_showid ON tv_episodes(showid);",
                 "CREATE INDEX idx_sta_epi_air ON tv_episodes(status, episode, airdate);",
@@ -293,5 +294,17 @@ class AddCustomNameToShow(AddPreferWords):
 
         logger.info("Adding column custom_name to tvshows")
         self.add_column("tv_shows", "custom_name", "TEXT", "")
+        self.inc_minor_version()
+        logger.info("Updated to: {0:d}.{1:d}".format(*self.connection.version))
+
+class AddSeasonPackReleaseNames(AddCustomNameToShow):
+    def test(self):
+        return self.has_table("season_release_names")
+
+    def execute(self):
+        backup_database(self.connection.full_path, self.connection.version)
+
+        logger.info("Adding table for season_release_names, for better subtitle support")
+        self.connection.action("CREATE TABLE season_release_names (id PRIMARY KEY AUTOINCREMENT, name TEXT, episode TEXT, FOREIGN KEY (episode) REFERENCES tv_episodes(episode_id))")
         self.inc_minor_version()
         logger.info("Updated to: {0:d}.{1:d}".format(*self.connection.version))

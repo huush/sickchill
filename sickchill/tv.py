@@ -2599,6 +2599,12 @@ class TVEpisode(object):
         except Exception:
             logger.warning("{0}: Failed to modify date of '{1}'".format(self.show.indexerid, os.path.basename(self.location)))
 
+    def saveOriginalFilename(self, filename: str) -> None:
+        main_db_con = db.DBConnection()
+        for cur_ep in [self] + self.relatedEps:
+            with self.lock:
+                main_db_con.upsert("season_release_names", {"name": filename, "episode": cur_ep.indexerid}, {"episode": cur_ep.indexerid})
+
     def cleanup_download_properties(self):
         """
         Clean the properties related with the current download.

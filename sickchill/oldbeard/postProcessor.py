@@ -61,6 +61,9 @@ class PostProcessor(object):
         # name of the release that resulted in this folder
         self.release_name = release_name
 
+        # Lets store the exact original filename
+        self.original_file_name = Path(directory).name
+
         self.process_method = process_method if process_method else settings.PROCESS_METHOD
 
         self.in_history = False
@@ -1131,6 +1134,7 @@ class PostProcessor(object):
             main_db_con.mass_action(sql_l)
 
         ep_obj.airdateModifyStamp()
+        ep_obj.saveOriginalFilename(self.original_file_name)
 
         if settings.USE_ICACLS and os.name == "nt":
             os.popen('icacls "' + ep_obj._location + '"* /reset /T')
