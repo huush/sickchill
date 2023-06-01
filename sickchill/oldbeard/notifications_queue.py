@@ -58,6 +58,11 @@ class NotificationsQueue(generic_queue.GenericQueue):
     def add_item(self, message, notifier="discord", force_next=False):
         added = False
         item = None
+
+        if not settings.USE_DISCORD:
+            logger.debug("Notification for Discord not enabled, skipping this notification")
+            return added
+
         with self.lock:
             if self.queue and not force_next:
                 for index in range(0, len(self.queue)):
@@ -131,6 +136,14 @@ class DiscordTask(generic_queue.QueueItem):
         avatar_icon = avatar or settings.DISCORD_AVATAR_URL
         discord_tts = bool(settings.DISCORD_TTS if tts is None else tts)
 
+        if not settings.USE_DISCORD:
+            logger.debug("Notification for Discord not enabled, skipping this notification")
+            return False
+
+        if not discord_name:
+            logger.warning("Discord Bot Name is Blank. Please enter Webhook dedicated Bot Name.")
+            return False
+
         logger.info("Sending discord message: " + ", ".join(f["value"] for f in self.embed["fields"]))
         logger.info("Sending discord message to url: " + discord_webhook)
 
@@ -145,6 +158,7 @@ class DiscordTask(generic_queue.QueueItem):
             return False
         except requests.exceptions.RequestException as error:
             if error.response.status_code != 429 or int(error.response.headers.get("X-RateLimit-Remaining")) != 0:
+                logger.exception(f"RequestException traceback: {traceback.format_exc()}")
                 raise error
 
             logger.info("Discord rate limiting, retrying after {} seconds".format(error.response.headers.get("X-RateLimit-Reset-After")))
@@ -155,7 +169,7 @@ class DiscordTask(generic_queue.QueueItem):
             r.raise_for_status()
         except Exception as error:
             logger.exception(f"Error Sending Discord message: {error}")
-
+            logger.exception(f"Traceback: {traceback.format_exc()}")
             return False
 
         return True

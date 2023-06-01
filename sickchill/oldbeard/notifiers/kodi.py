@@ -72,6 +72,9 @@ class Notifier(object):
             The result will either be 'OK' or False, this is used to be parsed by the calling function.
 
         """
+        if not settings.USE_KODI and not force:
+            logger.debug("Notification for Kodi not enabled, skipping this notification")
+            return False
 
         self.setup(hosts=hosts, username=username, password=password)
         results = dict()
